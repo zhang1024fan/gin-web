@@ -1,0 +1,11 @@
+#安装依赖
+npm config set registry https://registry.npmmirror.com
+npm install vue-router@4 --save
+npm install element-plus --save
+npm install vuex@next --save
+npm install axios@0.27.2 --save
+npm install node-sass@7.0.3 -D npm install sass-loader@13.0.2 -D
+npm install less@4.1.1 --save npm install less-loader@8.0.0 --save
+npm install echarts@5.1.2 --save
+npm install vue3-treeselect --save
+npm install @element-plus/icons-vue
