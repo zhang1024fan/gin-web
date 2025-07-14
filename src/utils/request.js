@@ -12,7 +12,12 @@ import storage from "./storage"
 // 创建axios对象，添加全局配置
 const service = axios.create({
     baseURL: process.env.VUE_APP_BASE_API,
-    timeout: 8000
+    timeout: 8000,
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    }
 })
 
 // 请求拦截
@@ -52,8 +57,19 @@ function request(options) {
         options.params = options.data
     }
     service.defaults.baseURL = process.env.VUE_APP_BASE_API
-    return service(options)
+    return service(options).catch(error => {
+        if (error.response) {
+            // 请求已发出但服务器响应状态码不在 2xx 范围内
+            console.error('API Error:', error.response.status, error.response.data)
+        } else if (error.request) {
+            // 请求已发出但没有收到响应
+            console.error('No response received:', error.request)
+        } else {
+            // 发送请求时出错
+            console.error('Request error:', error.message)
+        }
+        return Promise.reject(error)
+    })
 }
 
 export default request
-
