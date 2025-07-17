@@ -2,20 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '@/views/Login.vue'
 import Home from '@/views/Home.vue'
 import Dashboard from '@/views/dashboard/index.vue'
-import Personal from '@/views/system/Personal.vue'
-import Admin from '@/views/system/Admin.vue'
-import Role from '@/views/system/Role.vue'
-import Dept from '@/views/system/Dept.vue'
-import Post from '@/views/system/Post.vue'
-import Menu from '@/views/system/Menu.vue'
-import LoginLog from '@/views/monitor/LoginLog.vue'
-import Operator from '@/views/monitor/Operator.vue'
-import Host from    '@/views/cmdb/cmdb-host.vue'
-import k8slist from '@/views/K8s/k8s-cplony.vue'
-import k8snodes from '@/views/K8s/k8s-nodes.vue'
-import ecskey     from '@/views/configcenter/ecs-key.vue'
-import jenkinskey from '@/views/configcenter/jenkins-key.vue'
-
+import systemRoutes from './system'
+import cmdbRoutes from './cmdb'
+import k8sRoutes from './k8s'
+import configRoutes from './config'
 
 // 路由集合
 const routes = [
@@ -27,75 +17,14 @@ const routes = [
         redirect: '/dashboard',
         children: [
             {
-                path: '/dashboard', // 主页现在指向dashboard
+                path: '/dashboard',
                 component: Dashboard,
                 meta: {tTitle: '仪表盘'}
             },
-            {
-                path: '/system/personal',
-                component: Personal,
-                meta: {sTitle: '个人中心', tTitle: '个人信息'}
-            },
-            {
-                path: '/system/admin',
-                component: Admin,
-                meta: {sTitle: '基础管理', tTitle: '用户信息'}
-            },
-            {
-                path: '/system/role',
-                component: Role,
-                meta: {sTitle: '基础管理', tTitle: '角色信息'}
-            },
-            {
-                path: '/system/menu',
-                component: Menu,
-                meta: {sTitle: '基础管理', tTitle: '菜单信息'}
-            },
-            {
-                path: '/system/dept',
-                component: Dept,
-                meta: {sTitle: '基础管理', tTitle: '部门信息'}
-            },
-            {
-                path: '/system/post',
-                component: Post,
-                meta: {sTitle: '基础管理', tTitle: '岗位信息'}
-            },
-            {
-                path: '/monitor/loginlog',
-                component: LoginLog,
-                meta: {sTitle: '日志管理', tTitle: '登录日志'}
-            },
-            {
-                path: '/monitor/operator',
-                component: Operator,
-                meta: {sTitle: '日志管理', tTitle: '操作日志'}
-            },
-            {
-                path: '/cmdb/ecs',
-                component: Host,
-                meta: {sTitle: '资产管理', tTitle: '主机管理'}
-            },
-            {
-                path: '/k8s/list',
-                component: k8slist,
-                meta: {sTitle: '容器管理', tTitle: '集群管理'}
-            },
-            {
-                path: '/k8s/node',
-                component: k8snodes,
-                meta: {sTitle: '容器管理', tTitle: '节点管理'}
-            },
-            {
-                path: '/config/ecskey',
-                component: ecskey,
-                meta: {sTitle: '配置中心', tTitle: '主机凭据'}
-            },
-            {
-                path: '/config/jenkinskey',
-                component: jenkinskey,
-                meta: {sTitle: '配置中心', tTitle: 'jenkins凭据'}
-            }
+            ...systemRoutes,
+            ...cmdbRoutes,
+            ...k8sRoutes,
+            ...configRoutes
         ]
     }
 ]

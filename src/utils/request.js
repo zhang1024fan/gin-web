@@ -11,7 +11,7 @@ import storage from "./storage"
 
 // 创建axios对象，添加全局配置
 const service = axios.create({
-    baseURL: process.env.VUE_APP_BASE_API,
+    baseURL: '', // 强制设置为空字符串
     timeout: 8000,
     withCredentials: true,
     headers: {
@@ -26,6 +26,14 @@ service.interceptors.request.use((req) => {
     const token = storage.getItem("token") || {}
     if(!headers.Authorization) {
         headers.Authorization = 'Bearer ' + token
+    }
+    // 强制使用相对路径
+    if (req.url && !req.url.startsWith('/')) {
+        req.url = '/' + req.url
+    }
+    // 确保API请求以/api开头
+    if (req.url && !req.url.startsWith('/api')) {
+        req.url = '/api' + (req.url.startsWith('/') ? '' : '/') + req.url
     }
     return req
 })
@@ -53,10 +61,22 @@ service.interceptors.response.use((res) => {
 // 请求核心函数
 function request(options) {
     options.method = options.method || 'get'
+    
+    // 统一处理GET请求参数
     if (options.method.toLowerCase() === 'get') {
-        options.params = options.data
+        options.params = options.data || options.params
     }
-    service.defaults.baseURL = process.env.VUE_APP_BASE_API
+    
+    // 调试日志 - 打印请求配置
+    console.log('Request config:', {
+        url: options.url,
+        method: options.method,
+        baseURL: service.defaults.baseURL,
+        fullPath: (service.defaults.baseURL || '') + (options.url || ''),
+        params: options.params,
+        data: options.data,
+        headers: options.headers
+    })
     return service(options).catch(error => {
         if (error.response) {
             // 请求已发出但服务器响应状态码不在 2xx 范围内

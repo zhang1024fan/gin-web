@@ -48,9 +48,9 @@
       <el-table-column label="创建时间" prop="createTime" />
       <el-table-column label="更多操作" class-name="small-padding fixed-width">
         <template v-slot="scope">
-          <el-button size="mini" type="text" icon="el-icon-edit" @click="showEditDeptDialog(scope.row.id)" v-authority="['base:dept:edit']">修改
+          <el-button size="mini" type="text" icon="Edit" @click="showEditDeptDialog(scope.row.id)" v-authority="['base:dept:edit']">修改
           </el-button>
-          <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDeptDelete(scope.row)"
+          <el-button size="mini" type="text" icon="Delete" @click="handleDeptDelete(scope.row)"
                      :disabled="scope.row.deptType == '1' ? true : false" v-authority="['base:dept:delete']">删除
           </el-button>
         </template>
