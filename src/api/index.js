@@ -12,13 +12,13 @@ export default {
     // 基础API
     captcha() {
         return request({
-            url: "/api/captcha",
+            url: 'captcha',
             method: 'get'
         })
     },
     login(params) {
         return request({
-            url: "/api/login",
+            url: 'login',
             method: 'post',
             data: params
         })

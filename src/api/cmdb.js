@@ -4,20 +4,20 @@ export default {
     // cmdb业务分组
     createCmdbGroup(data) {
         return request({
-            url: '/api/cmdb/groupadd',
+            url: 'cmdb/groupadd',
             method: 'post',
             data: data
         })
     },
     getAllCmdbGroups() {
         return request({
-            url: '/api/cmdb/grouplist',
+            url: 'cmdb/grouplist',
             method: 'get'
         })
     },
     getCmdbGroupByName(name) {
         return request({
-            url: '/api/cmdb/groupbyname',
+            url: 'cmdb/groupbyname',
             method: 'get',
             params: {
                 name: name
@@ -26,19 +26,19 @@ export default {
     },
     updateCmdbGroup(data) {
         return request({
-            url: '/api/cmdb/groupupdate',
+            url: 'cmdb/groupupdate',
             method: 'put',
             data: data
         })
     },
-    deleteCmdbGroup(id) {
-        const data = {
-            id
-        }
-        return request({
-            url: '/api/cmdb/groupdelete',
-            method: 'delete',
-            data: data
-        })
-    }
+deleteCmdbGroup(id) {
+const data = {
+id
+}
+    return request({
+      url: 'cmdb/groupdelete',
+      method: 'delete',
+      data: data
+    })
+}
 }
