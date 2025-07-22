@@ -23,6 +23,7 @@
               v-loading="loading" :data="authList">
       <el-table-column label="凭据名称" prop="name" />
       <el-table-column label="用户名" prop="username" v-if="authList.some(item => item.type === 1)" />
+      <el-table-column label="端口" prop="port" width="100" />
       <el-table-column label="认证信息" width="120">
         <template v-slot="scope">
           <el-tag :type="scope.row.type === 1 ? 'success' : 'warning'">
@@ -46,9 +47,18 @@
         <el-form-item label="凭据名称" prop="name">
           <el-input v-model="formData.name"></el-input>
         </el-form-item>
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="formData.username"></el-input>
-        </el-form-item>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="formData.username"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="端口" prop="port">
+              <el-input v-model.number="formData.port" type="number" :min="1" :max="65535"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item label="认证类型" prop="type">
           <el-radio-group v-model="formData.type">
             <el-radio :label="1">密码认证</el-radio>
@@ -97,6 +107,7 @@ export default {
         username: '',
         password: '',
         publicKey: '',
+        port: '',
         remark: ''
       },
       formRules: {
@@ -127,6 +138,22 @@ export default {
             validator: (rule, value, callback) => {
               if (this.formData.type === 2 && !value) {
                 callback(new Error('请输入公钥'))
+              } else {
+                callback()
+              }
+            }
+          }
+        ],
+        port: [
+          { 
+            required: true, 
+            message: '请输入端口号', 
+            trigger: 'blur',
+            validator: (rule, value, callback) => {
+              if (!value) {
+                callback(new Error('请输入端口号'))
+              } else if (isNaN(value) || value < 1 || value > 65535) {
+                callback(new Error('请输入1-65535之间的有效端口号'))
               } else {
                 callback()
               }
@@ -195,6 +222,7 @@ export default {
           username: '',
           password: '',
           publicKey: '',
+          port: '',
           remark: ''
         }
         this.dialogVisible = true
@@ -213,6 +241,7 @@ export default {
           username: row.username,
           password: row.type === 1 ? row.password : '',
           publicKey: row.type === 2 ? row.publicKey : '',
+          port: row.port || '',
           remark: row.remark || ''
         }
         this.dialogVisible = true

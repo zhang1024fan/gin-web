@@ -14,7 +14,7 @@
     <!--操作按钮-->
     <div class="mb8" style="text-align: left">
       <el-button plain type="primary" icon="Plus" size="mini"
-                 @click="addGroupDialogVisible = true">创建分组</el-button>
+                 @click="addGroupDialogVisible = true" v-authority="['cmdb:group:add']" >创建分组</el-button>
       <el-button plain type="info" icon="Sort" size="mini" @click="toggleExpandAll">展开/折叠</el-button>
     </div>
     <!--列表-->
@@ -32,6 +32,7 @@
             type="text" 
             icon="Edit" 
             @click="showEditGroupDialog(scope.row.id)"
+            v-authority="['cmdb:group:update']"
             v-if="scope.row.id !== DEFAULT_GROUP_ID"
           >修改</el-button>
           <el-button 
@@ -39,6 +40,7 @@
             type="text" 
             icon="Delete" 
             @click="handleGroupDelete(scope.row)"
+            v-authority="['cmdb:group:delete']"
             v-if="scope.row.id !== DEFAULT_GROUP_ID"
           >删除</el-button>
         </template>

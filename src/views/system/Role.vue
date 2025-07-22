@@ -116,7 +116,7 @@
     <!--分配权限-->
     <el-dialog title="分配权限" v-model="setMenuDialogVisible" width="20%" @close="setRightDialogClosed">
       <el-tree :data="menuList" :props="treeProps" show-checkbox node-key="id"
-               :default-checked-keys="defKeys" ref="treeRef">
+               :default-checked-keys="defKeys" ref="treeRef" :check-strictly="true">
       </el-tree>
       <span slot="footer" class="dialog-footer">
                 <el-button type="primary" @click="allotMenus">确 定</el-button>
