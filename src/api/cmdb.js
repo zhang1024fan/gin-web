@@ -65,10 +65,23 @@ export default {
         })
     },
     getCmdbHostList(params) {
+        // 确保参数名与后端API一致
+        const queryParams = {
+            page: params.page || 1,
+            pageSize: params.pageSize || 10
+        }
+        
+        // 添加搜索条件，确保参数名与后端API一致
+        if (params.name) queryParams.name = params.name
+        if (params.ip) queryParams.ip = params.ip
+        if (params.status) queryParams.status = params.status
+        if (params.groupId) queryParams.groupId = params.groupId
+
+        console.log('最终API查询参数:', JSON.stringify(queryParams, null, 2))
         return request({
             url: 'cmdb/hostlist',
             method: 'get',
-            params: params
+            params: queryParams
         })
     },
     getCmdbHostById(id) {
@@ -83,6 +96,46 @@ export default {
             url: 'cmdb/hostgroup',
             method: 'get',
             params: { groupId }
+        })
+    },
+    GetCmdbHostsByHostNameLike(hostName, params) {
+        return request({
+            url: '/cmdb/hostbyname',
+            method: 'get',
+            params: { 
+                name: hostName,
+                ...params
+            }
+        })
+    },
+    GetCmdbHostsByIP(ip, params) {
+        return request({
+            url: 'cmdb/hostbyip',
+            method: 'get',
+            params: { 
+                ip,
+                ...params
+            }
+        })
+    },
+    GetCmdbHostsByStatus(status, params) {
+        return request({
+            url: 'cmdb/hostbystatus',
+            method: 'get',
+            params: { 
+                status,
+                ...params
+            }
+        })
+    },
+    getCmdbHostsByGroupId(groupId, params) {
+        return request({
+            url: 'cmdb/hostgroup',
+            method: 'get',
+            params: {
+                groupId,
+                ...params
+            }
         })
     }
 }

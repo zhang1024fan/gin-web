@@ -6,15 +6,16 @@
       <div class="group-tree-section">
         <el-card shadow="never" style="height: 100%; border: none;">
           <div slot="header">
-            <span>资产分组</span>
+            <h3>资产分组</h3>
           </div>
           <!-- 搜索框 -->
           <el-input
             v-model="groupSearchText"
             placeholder="搜索分组"
             clearable
-            size="small"
-            style="margin-bottom: 10px"
+            size="medium"
+            style="margin-bottom: 20px; width: 100%"
+            @input="handleGroupSearch"
           >
             <template #prefix>
               <el-icon><Search /></el-icon>
@@ -22,10 +23,11 @@
           </el-input>
 
           <el-tree
+              ref="groupTree"
               :data="groupList"
               :props="defaultProps"
               node-key="id"
-              :default-expanded-keys="expandedKeys"
+              :expanded-keys="expandedKeys"
               :highlight-current="true"
               @node-click="handleGroupClick"
               @node-expand="handleNodeExpand"
@@ -41,7 +43,7 @@
                 </template>
                 <!-- 二级分组：固定使用DocumentRemove图标 -->
                 <template v-else>
-                  <el-icon style="margin-right: 5px"><DocumentRemove /></el-icon>
+                  <el-icon style="margin-right: 5px"><Tickets /></el-icon>
                 </template>
                 {{ node.label }}
               </span>
@@ -67,13 +69,13 @@
               <el-input
                   size="mini"
                   placeholder="请输入IP地址"
-                  clearable
+                  clearable  
                   v-model="queryParams.ip"
                   @keyup.enter="handleQuery"
               />
             </el-form-item>
-            <el-form-item label="状态" prop="status">
-              <el-select size="mini" placeholder="请选择状态" v-model="queryParams.status" style="width: 100px;">
+            <el-form-item label="主机状态" prop="status">
+              <el-select size="mini"  placeholder="请选择状态" v-model="queryParams.status" style="width: 150px;">
                 <el-option v-for="item in statusList" :key="item.value" :label="item.label" :value="item.value"></el-option>
               </el-select>
             </el-form-item>
@@ -98,20 +100,58 @@
               :header-cell-style="{ background: '#eef1f6', color: '#606266' }"
           >
             <el-table-column label="ID" prop="id" v-if="false" />
-            <el-table-column label="主机名称" prop="hostName" width="120" />
-            <el-table-column label="IP地址" prop="sshIp" width="120" />
-            <el-table-column label="操作系统" prop="os" width="120" />
-            <el-table-column label="CPU" prop="cpu" width="80" />
-            <el-table-column label="内存" prop="memory" width="80" />
-            <el-table-column label="磁盘" prop="disk" width="80" />
+            <el-table-column label="主机名称" width="120">
+              <template v-slot="scope">
+                <el-link type="primary" @click="showHostDetail(scope.row)">{{ scope.row.hostName }}</el-link>
+              </template>
+            </el-table-column>
+            <el-table-column label="IP地址" width="150">
+              <template v-slot="scope">
+                <div>
+                  <div v-if="scope.row.publicIp" style="color: #409EFF; margin-top: 4px">
+                    <el-icon><Cloudy /></el-icon> {{ scope.row.publicIp || '无公网IP' }}
+                  </div>
+                  <div v-if="scope.row.privateIp" style="color: #67C23A">
+                    <el-icon><HomeFilled /></el-icon> {{ scope.row.privateIp || '无内网IP' }}
+                  </div>
+
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="主机类型" prop="vendor">
+              <template v-slot="scope">
+                <div style="display: flex; align-items: center">
+                  <template v-if="scope.row.vendor == 1">
+                    <el-icon :size="18" color="#409EFF"><OfficeBuilding /></el-icon>
+                    <span style="margin-left: 5px">自建主机</span>
+                  </template>
+                  <template v-else-if="scope.row.vendor == 2">
+                    <img src="@/assets/image/aliyun.png" style="width: 18px; height: 18px"/>
+                    <span style="margin-left: 5px">阿里云</span>
+                  </template>
+                  <template v-else-if="scope.row.vendor == 3">
+                    <img src="@/assets/image/tengxun.png" style="width: 18px; height: 18px"/>
+                    <span style="margin-left: 5px">腾讯云</span>
+                  </template>
+                  <template v-else>
+                    {{ scope.row.vendor }}
+                  </template>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="配置信息" width="120">
+              <template v-slot="scope">
+                {{ scope.row.cpu }}核{{ scope.row.memory }}G
+              </template>
+            </el-table-column>
+            <el-table-column label="备注信息" prop="remark"  />
             <el-table-column label="状态" width="100">
               <template v-slot="scope">
-                <el-tag :type="scope.row.status === 1 ? 'success' : 'danger'">
-                  {{ scope.row.status === 1 ? '在线' : '离线' }}
+                <el-tag :type="getStatusTagType(scope.row.status)">
+                  {{ getStatusText(scope.row.status) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="创建时间" prop="createTime" width="160" />
             <el-table-column label="操作" fixed="right" width="180">
               <template v-slot="scope">
                 <div class="table-operation">
@@ -152,10 +192,17 @@
               <el-cascader
                 v-model="addForm.groupId"
                 :options="groupList"
-                :props="{ checkStrictly: true, value: 'id', label: 'name', children: 'children' }"
+                :props="{
+                  checkStrictly: true,
+                  value: 'id',
+                  label: 'name',
+                  children: 'children',
+                  disabled: (node) => node.children && node.children.length > 0
+                }"
                 placeholder="请选择分组"
                 style="width: 100%"
                 clearable
+                filterable
                 @change="handleGroupChange"
               ></el-cascader>
             </el-form-item>
@@ -189,7 +236,12 @@
         <el-row>
           <el-col :span="24">
             <el-form-item label="认证凭据" prop="authId">
-              <el-select v-model="addForm.authId" placeholder="请选择认证凭据" style="width: 100%">
+              <el-select 
+                v-model="addForm.authId" 
+                placeholder="请选择认证凭据" 
+                style="width: 100%"
+                filterable
+              >
                 <el-option
                   v-for="item in authList"
                   :key="item.id"
@@ -297,6 +349,47 @@
         </span>
       </el-form>
     </el-dialog>
+
+    <!-- 主机详情抽屉 -->
+    <el-drawer
+      v-model="detailDrawer"
+      title="主机详情"
+      direction="rtl"
+      size="40%"
+      :before-close="handleDetailClose">
+      
+      <!-- 基本信息部分 -->
+      <h3 style="margin: 20px 0 10px 0">基本信息</h3>
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="主机名称">{{ hostDetail.hostName }}</el-descriptions-item>
+        <el-descriptions-item label="主机分组">{{ getGroupName(hostDetail.groupId) }}</el-descriptions-item>
+        <el-descriptions-item label="连接地址">
+          {{ hostDetail.sshName }}@{{ hostDetail.sshIp }}:{{ hostDetail.sshPort }}
+        </el-descriptions-item>
+        <el-descriptions-item label="认证类型">
+          {{ hostDetail.sshKeyId ? '密钥' : '密码' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="描述信息">{{ hostDetail.remark }}</el-descriptions-item>
+      </el-descriptions>
+
+      <!-- 扩展信息部分 -->
+      <h3 style="margin: 20px 0 10px 0">扩展信息</h3>
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="实例ID">{{ hostDetail.instanceId }}</el-descriptions-item>
+        <el-descriptions-item label="实例名称">{{ hostDetail.name }}</el-descriptions-item>
+        <el-descriptions-item label="操作系统">{{ hostDetail.os }}</el-descriptions-item>
+        <el-descriptions-item label="CPU">{{ hostDetail.cpu }}核</el-descriptions-item>
+        <el-descriptions-item label="内存">{{ hostDetail.memory }}G</el-descriptions-item>
+        <el-descriptions-item label="磁盘">{{ hostDetail.disk }}GB</el-descriptions-item>
+        <el-descriptions-item label="内网IP">{{ hostDetail.privateIp }}</el-descriptions-item>
+        <el-descriptions-item label="公网IP">{{ hostDetail.publicIp || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="实例计费方式">{{ hostDetail.billingType }}</el-descriptions-item>
+        <el-descriptions-item label="网络计费方式">{{ hostDetail.networkBillingType || '按流量计费' }}</el-descriptions-item>
+        <el-descriptions-item label="创建时间">{{ hostDetail.createTime }}</el-descriptions-item>
+        <el-descriptions-item label="到期时间">{{ hostDetail.expireTime || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="更新时间">{{ hostDetail.updateTime }}</el-descriptions-item>
+      </el-descriptions>
+    </el-drawer>
   </el-card>
 </template>
 
@@ -309,8 +402,9 @@ export default {
       groupSearchText: '',
       expandedKeys: [], // 用于跟踪展开的节点key
       statusList: [
-        { value: 1, label: '在线' },
-        { value: 0, label: '离线' }
+        { value: 2, label: '未认证' },
+        { value: 1, label: '认证成功' },
+        { value: 3, label: '认证失败' }
       ],
       loading: false,
       queryParams: {
@@ -357,6 +451,32 @@ export default {
         username: [{ required: true, message: '请输入连接用户名', trigger: 'blur' }],
         authId: [{ required: true, message: '请选择认证凭据', trigger: 'change' }],
         groupId: [{ required: true, message: '请选择所属分组', trigger: 'change' }]
+      },
+      // 主机详情相关
+      detailDrawer: false,
+      hostDetail: {
+        hostName: '',
+        groupId: '',
+        privateIp: '',
+        publicIp: '',
+        sshIp: '',
+        sshName: '',
+        sshKeyId: '',
+        sshPort: 22,
+        remark: '',
+        vendor: '',
+        region: '',
+        instanceId: '',
+        os: '',
+        status: 0,
+        cpu: '',
+        memory: '',
+        disk: '',
+        billingType: '',
+        createTime: '',
+        expireTime: '',
+        updateTime: '',
+        name: ''
       }
     }
   },
@@ -377,6 +497,87 @@ export default {
         if (businessGroup) {
           this.addForm.groupId = businessGroup.id
         }
+      }
+    },
+
+    // 处理分组搜索
+    async handleGroupSearch() {
+      console.log('开始搜索分组:', this.groupSearchText)
+      if (!this.groupSearchText) {
+        console.log('搜索文本为空，重置展开状态')
+        this.expandedKeys = []
+        return
+      }
+      
+      try {
+        console.log('调用API搜索分组:', this.groupSearchText)
+        const { data: res } = await this.$api.getCmdbGroupByName(this.groupSearchText)
+        console.log('分组搜索结果:', JSON.stringify(res, null, 2))
+        
+        if (res.code === 200 && res.data) {
+          console.log('找到匹配分组:', res.data)
+          
+          // 确保树组件引用存在
+          const tree = this.$refs.groupTree
+          if (!tree) {
+            console.error('树组件引用不存在')
+            return
+          }
+
+          // 打印当前分组树结构
+          console.log('当前分组树结构:', JSON.stringify(this.groupList, null, 2))
+
+          // 找到匹配的分组并展开其父级
+          const findAndExpandParent = (groups, targetId, path = []) => {
+            for (const group of groups) {
+              console.log('检查分组:', group.id, '名称:', group.name)
+              if (group.id === targetId) {
+                console.log('找到目标分组:', group.id)
+                return [...path, group.id]
+              }
+              if (group.children && group.children.length > 0) {
+                console.log('检查子分组:', group.children.length)
+                const foundPath = findAndExpandParent(group.children, targetId, [...path, group.id])
+                if (foundPath) {
+                  return foundPath
+                }
+              }
+            }
+            return null
+          }
+          
+          // 获取展开路径
+          const expandPath = findAndExpandParent(this.groupList, res.data.id)
+          console.log('展开路径:', expandPath)
+          
+          if (expandPath) {
+            // 设置展开的keys
+            this.expandedKeys = expandPath.slice(0, -1)
+            console.log('设置展开的keys:', this.expandedKeys)
+            
+            // 强制更新树组件
+            this.$nextTick(() => {
+              console.log('强制更新树组件')
+              tree.setCurrentKey(res.data.id)
+              console.log('已设置当前选中分组:', res.data.id)
+              
+              // 确保树组件已更新
+              setTimeout(() => {
+                console.log('检查树组件状态')
+                console.log('当前展开keys:', tree.getCurrentKey())
+                console.log('当前选中节点:', tree.getCurrentNode())
+              }, 500)
+            })
+          } else {
+            console.warn('未找到匹配分组的路径')
+            this.$message.warning('未找到匹配的分组路径')
+          }
+        } else {
+          console.warn('未找到匹配分组')
+        }
+      } catch (error) {
+        console.error('搜索分组失败:', error)
+        this.$message.error('搜索分组失败: ' + error.message)
       }
     },
 
@@ -423,21 +624,99 @@ export default {
     async getHostList() {
       this.loading = true
       try {
-        const { data: res } = await this.$api.getCmdbHostList(this.queryParams)
-        console.log('API响应数据:', res)
-        if (res.code === 200) {
-          // 根据API实际返回结构调整赋值
-          this.hostList = Array.isArray(res.data) ? res.data : []
-          this.total = this.hostList.length
-          console.log('设置的主机列表:', this.hostList)
-          console.log('主机数量:', this.total)
-        } else {
-          console.error('获取主机列表失败:', res.message)
-          this.$message.error(`获取主机列表失败: ${res.message}`)
+        let response
+        const { hostName, ip, status, pageNum, pageSize } = this.queryParams
+        
+        // 构建分页参数
+        const baseParams = {
+          page: pageNum,
+          pageSize: pageSize
         }
+
+        console.log('基础分页参数:', JSON.stringify(baseParams, null, 2))
+        
+        // 根据查询条件选择API调用
+        if (hostName && !ip && !status) {
+          console.log('执行主机名称模糊查询，参数:', hostName)
+          response = await this.$api.GetCmdbHostsByHostNameLike(hostName, baseParams)
+          console.log('模糊查询结果:', response)
+        } else if (ip && !hostName && !status) {
+          console.log('执行IP精确查询，参数:', ip)
+          response = await this.$api.GetCmdbHostsByIP(ip, baseParams)
+          console.log('IP查询结果:', response)
+        } else if (status && !hostName && !ip) {
+          console.log('执行状态查询，参数:', status)
+          response = await this.$api.GetCmdbHostsByStatus(status, baseParams)
+          console.log('状态查询结果:', response)
+        } else {
+          // 默认查询所有主机，保留分页参数
+          console.log('执行默认查询')
+          response = await this.$api.getCmdbHostList(baseParams)
+          console.log('默认查询结果:', response)
+        }
+        
+        console.log('查询结果:', JSON.stringify(response, null, 2))
+
+        console.log('API完整响应:', response)
+        
+        // 处理axios响应结构
+        const axiosResponse = response?.data ? response : { data: response }
+        
+        // 严格检查响应格式
+        if (!axiosResponse || typeof axiosResponse !== 'object') {
+          throw new Error('API返回无效响应格式')
+        }
+
+        // 检查响应数据
+        const res = axiosResponse.data
+        if (!res || typeof res !== 'object') {
+          throw new Error('无效的响应数据结构')
+        }
+
+        // 检查响应码
+        if (res.code === undefined || res.code !== 200) {
+          throw new Error(res.message || '获取主机列表失败')
+        }
+
+        // 确保data存在，即使为空数组
+        if (res.data === undefined) {
+          throw new Error('响应缺少data字段')
+        }
+
+        // 处理响应数据 - 适配不同API返回格式
+        if (Array.isArray(res.data)) {
+          // 直接返回数组的情况（如GetCmdbHostsByIP）
+          this.hostList = res.data
+          this.total = res.data.length
+        } else if (res.data?.list) {
+          // 返回分页格式的情况（如getCmdbHostList）
+          this.hostList = res.data.list
+          this.total = res.data.total
+          if (res.data.page) {
+            this.queryParams.pageNum = res.data.page
+          }
+          if (res.data.pageSize) {
+            this.queryParams.pageSize = res.data.pageSize
+          }
+        } else {
+          // 其他情况
+          this.hostList = []
+          this.total = 0
+        }
+        
+        console.log('处理后主机列表:', this.hostList)
+        console.log('处理后总数:', this.total)
+        
+        console.log('成功获取主机列表，数量:', this.hostList.length, '总数:', this.total)
       } catch (error) {
-        console.error('获取主机列表异常:', error)
-        this.$message.error('获取主机列表异常')
+        console.error('获取主机列表异常:', {
+          error: error.message,
+          stack: error.stack,
+          queryParams: this.queryParams
+        })
+        this.$message.error(`获取主机列表失败: ${error.message}`)
+        this.hostList = []
+        this.total = 0
       } finally {
         this.loading = false
       }
@@ -464,7 +743,10 @@ export default {
       this.loading = true
       this.queryParams.groupId = groupId
       try {
-        const { data: res } = await this.$api.getCmdbHostsByGroupId(groupId)
+        const { data: res } = await this.$api.getCmdbHostsByGroupId(groupId, {
+          page: this.queryParams.pageNum,
+          pageSize: this.queryParams.pageSize
+        })
         if (res.code === 200) {
           this.hostList = res.data || []
           this.total = res.data?.length || 0
@@ -592,7 +874,16 @@ export default {
     async showEditHostDialog(id) {
       const { data: res } = await this.$api.getCmdbHostById(id)
       if (res.code === 200) {
-        this.hostInfo = res.data
+        this.hostInfo = {
+          id: res.data.id,
+          hostName: res.data.hostName,
+          groupId: res.data.groupId,
+          remark: res.data.remark,
+          ip: res.data.sshIp,
+          port: res.data.sshPort,
+          username: res.data.sshName,
+          authId: res.data.sshKeyId
+        }
         this.editDialogVisible = true
       }
     },
@@ -646,6 +937,69 @@ export default {
       }
     },
     
+    // 获取状态文本
+    getStatusText(status) {
+      const statusMap = {
+        1: '认证成功',
+        2: '未认证', 
+        3: '认证失败'
+      }
+      return statusMap[status] || '未知状态'
+    },
+
+    // 获取状态标签类型
+    getStatusTagType(status) {
+      const typeMap = {
+        1: 'success',
+        2: 'warning', 
+        3: 'danger'
+      }
+      return typeMap[status] || 'info'
+    },
+
+    // 根据分组ID获取分组名称
+    getGroupName(groupId) {
+      if (!groupId) return '未分组'
+      const findGroup = (groups, id) => {
+        for (const group of groups) {
+          if (group.id === id) return group.name
+          if (group.children && group.children.length > 0) {
+            const found = findGroup(group.children, id)
+            if (found) return found
+          }
+        }
+        return null
+      }
+      return findGroup(this.groupList, groupId) || '未知分组'
+    },
+
+    // 显示主机详情
+    async showHostDetail(row) {
+      try {
+        console.log('开始获取主机详情，ID:', row.id)
+        const { data: res } = await this.$api.getCmdbHostById(row.id)
+        console.log('获取主机详情响应:', res)
+        
+        if (res.code === 200) {
+          console.log('成功获取主机详情数据:', res.data)
+          this.hostDetail = res.data
+          this.detailDrawer = true
+          console.log('已设置detailDrawer为true')
+        } else {
+          console.error('获取主机详情失败:', res.message)
+          this.$message.error(res.message || '获取主机详情失败')
+        }
+      } catch (error) {
+        console.error('获取主机详情失败:', error)
+        this.$message.error('获取主机详情失败: ' + error.message)
+      }
+    },
+
+    // 关闭详情抽屉
+    handleDetailClose() {
+      this.detailDrawer = false
+    },
+
     // 删除主机
     async handleHostDelete(row) {
       const confirmResult = await this.$confirm('是否确认删除主机"' + row.hostName + '"?', '提示', {
@@ -703,5 +1057,29 @@ export default {
 .table-operation {
   display: flex;
   justify-content: space-around;
+}
+
+/* 完全移除表单分割线 */
+.el-dialog .el-form-item {
+  border-bottom: none !important;
+  margin-bottom: 12px;
+  padding-bottom: 0;
+}
+
+/* 移除行和列之间的分割线 */
+.el-row {
+  border-bottom: none !important;
+}
+
+.el-col {
+  border-right: none !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* 移除最后一个列的右边距 */
+.el-col:last-child {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
 }
 </style>

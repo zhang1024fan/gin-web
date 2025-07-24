@@ -28,7 +28,7 @@
                 </template>
                 <!-- 二级部门：固定使用DocumentRemove图标 -->
                 <template v-else>
-                  <el-icon style="margin-right: 5px"><DocumentRemove /></el-icon>
+                  <el-icon style="margin-right: 5px"><Folder /></el-icon>
                 </template>
                 {{ node.label }}
               </span>

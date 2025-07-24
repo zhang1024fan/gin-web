@@ -1,6 +1,6 @@
-import Host from '@/views/cmdb/cmdb-host.vue'
-import Group from '@/views/cmdb/cmdb-group.vue'
-import Db from '@/views/cmdb/cmdb-db.vue'
+import Host from '@/views/cmdb/cmdbHost.vue'
+import Group from '@/views/cmdb/cmdbGroup.vue'
+import Db from '@/views/cmdb/cmdbDB.vue'
 
 const routes = [
     {
