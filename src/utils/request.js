@@ -11,12 +11,10 @@ import storage from "./storage"
 
 // 创建axios对象，添加全局配置
 const service = axios.create({
-    baseURL: process.env.VUE_APP_BASE_API,
+    baseURL: 'http://127.0.0.1:8000',
     timeout: 8000,
-    withCredentials: true,
     headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
+        'Content-Type': 'application/json'
     }
 })
 
@@ -27,6 +25,28 @@ service.interceptors.request.use((req) => {
     if(!headers.Authorization) {
         headers.Authorization = 'Bearer ' + token
     }
+    // 调试日志 - 打印完整的请求配置
+    console.group('Request Interceptor')
+    console.log('Original URL:', req.url)
+    console.log('Base URL:', service.defaults.baseURL)
+    
+    // 确保URL以/api/v1开头
+    if (req.url && !req.url.startsWith('api/v1/')) {
+        req.url = 'api/v1/' + (req.url.startsWith('/') ? req.url.substring(1) : req.url)
+    }
+    console.log('Processed URL:', req.url)
+    
+    // 构造完整URL
+    const fullURL = service.defaults.baseURL + '/' + (req.url || '')
+    console.log('Full URL:', fullURL)
+    
+    // 验证最终请求URL
+    console.log('Final request URL:', req.baseURL + req.url)
+    console.groupEnd()
+    
+    // 确保axios使用正确的URL
+    req.url = req.url || ''
+    req.baseURL = service.defaults.baseURL
     return req
 })
 
@@ -53,21 +73,42 @@ service.interceptors.response.use((res) => {
 // 请求核心函数
 function request(options) {
     options.method = options.method || 'get'
+    
+    // 统一处理GET请求参数
     if (options.method.toLowerCase() === 'get') {
-        options.params = options.data
+        options.params = options.data || options.params
     }
-    service.defaults.baseURL = process.env.VUE_APP_BASE_API
+    
+    // 确保URL以/api/v1开头
+    if (options.url && !options.url.startsWith('api/v1/')) {
+        options.url = 'api/v1/' + (options.url.startsWith('/') ? options.url.substring(1) : options.url)
+    }
+    
+    // 调试日志 - 打印请求配置
+    console.log('Request config:', {
+        url: options.url,
+        method: options.method,
+        baseURL: service.defaults.baseURL,
+        fullPath: (service.defaults.baseURL || '') + '/' + (options.url || ''),
+        params: options.params,
+        data: options.data,
+        headers: options.headers
+    })
     return service(options).catch(error => {
+        console.group('Request Error Details')
+        console.log('Error config:', error.config)
         if (error.response) {
-            // 请求已发出但服务器响应状态码不在 2xx 范围内
             console.error('API Error:', error.response.status, error.response.data)
         } else if (error.request) {
-            // 请求已发出但没有收到响应
-            console.error('No response received:', error.request)
+            console.error('No response received. Possible causes:')
+            console.error('- Backend service not running')
+            console.error('- Network connectivity issues')
+            console.error('- CORS problems')
+            console.error('Request details:', error.request)
         } else {
-            // 发送请求时出错
-            console.error('Request error:', error.message)
+            console.error('Request setup error:', error.message)
         }
+        console.groupEnd()
         return Promise.reject(error)
     })
 }

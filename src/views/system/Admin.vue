@@ -15,10 +15,23 @@
               default-expand-all
               :highlight-current="true"
               @node-click="handleDeptClick"
-              style="border: 1px solid #e4e7ed; padding: 10px;"
+              @node-expand="handleNodeExpand"
+              @node-collapse="handleNodeCollapse"
+              style="border: none; padding: 10px;"
           >
             <template v-slot="{ node, data }">
-              <span :class="{ 'font-weight-bold': !data.parentId }">{{ node.label }}</span>
+              <span :class="{ 'font-weight-bold': !data.parentId }">
+                <!-- 一级部门：根据展开状态切换图标 -->
+                <template v-if="!data.parentId">
+                  <el-icon v-if="expandedKeys.includes(node.key)" style="margin-right: 5px"><FolderOpened /></el-icon>
+                  <el-icon v-else style="margin-right: 5px"><Folder /></el-icon>
+                </template>
+                <!-- 二级部门：固定使用DocumentRemove图标 -->
+                <template v-else>
+                  <el-icon style="margin-right: 5px"><DocumentRemove /></el-icon>
+                </template>
+                {{ node.label }}
+              </span>
             </template>
           </el-tree>
         </el-card>
@@ -319,6 +332,7 @@ export default {
   components: {Treeselect},
   data() {
     return {
+      expandedKeys: [], // 用于跟踪展开的节点key
       statusList: [{
         value: '1',
         label: '启用',
@@ -611,6 +625,16 @@ export default {
     },
 
 // 点击部门节点
+    handleNodeExpand(data, node) {
+      if (!this.expandedKeys.includes(node.key)) {
+        this.expandedKeys.push(node.key)
+      }
+    },
+
+    handleNodeCollapse(data, node) {
+      this.expandedKeys = this.expandedKeys.filter(key => key !== node.key)
+    },
+
     handleDeptClick(node, element) {
       let deptId;
 
@@ -683,5 +707,3 @@ export default {
 }
 
 </style>
-
-

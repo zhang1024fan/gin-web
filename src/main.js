@@ -27,7 +27,6 @@ for (let iconName in ElIconModules) {
 
 // 挂载全局工具方法
 app.config.globalProperties.$storage = storage
-app.config.globalProperties.$request = request
 app.config.globalProperties.$api = api
 app.config.globalProperties.$handleTree = handleTree
 // 使用插件和模块

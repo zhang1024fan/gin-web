@@ -53,9 +53,9 @@
       <el-table-column label="描述" prop="remark" />
       <el-table-column label="更多操作">
         <template v-slot="scope">
-          <el-button type="text" size="small" icon="el-icon-edit"
+          <el-button type="text" size="small" icon="Edit"
                      @click="handleUpdate(scope.row.id)" v-authority="['base:post:edit']">编辑</el-button>
-          <el-button type="text" size="small" icon="el-icon-delete"
+          <el-button type="text" size="small" icon="Delete"
                      @click="handleDelete(scope.row.id)" v-authority="['base:post:delete']">删除</el-button>
         </template>
       </el-table-column>
