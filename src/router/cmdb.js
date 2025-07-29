@@ -1,6 +1,7 @@
 import Host from '@/views/cmdb/cmdbHost.vue'
 import Group from '@/views/cmdb/cmdbGroup.vue'
 import Db from '@/views/cmdb/cmdbDB.vue'
+import SSH from '@/views/cmdb/Host/SSH.vue'
 
 const routes = [
     {
@@ -17,7 +18,13 @@ const routes = [
         path: '/cmdb/db',
         component: Db,
         meta: {sTitle: '资产管理', tTitle: '数据库管理'}
+    }, 
+    {
+        path: '/cmdb/ssh',
+        component: SSH,
+        meta: {sTitle: '资产管理', tTitle: '终端登录'}
     }
+
 ]
 
 export default routes

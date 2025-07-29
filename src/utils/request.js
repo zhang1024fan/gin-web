@@ -37,11 +37,13 @@ service.interceptors.request.use((req) => {
     console.log('Processed URL:', req.url)
     
     // 构造完整URL
-    const fullURL = service.defaults.baseURL + '/' + (req.url || '')
+    const fullURL = `${service.defaults.baseURL}/${req.url || ''}`.replace(/([^:]\/)\/+/g, '$1')
     console.log('Full URL:', fullURL)
     
     // 验证最终请求URL
-    console.log('Final request URL:', req.baseURL + req.url)
+    console.log('Final request URL:', fullURL)
+    req.url = fullURL
+    req.baseURL = ''
     console.groupEnd()
     
     // 确保axios使用正确的URL

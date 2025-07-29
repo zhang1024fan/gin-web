@@ -104,16 +104,6 @@
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
-                <!--终端按钮-->
-                <el-button 
-                  type="primary" 
-                  size="mini" 
-                  icon="Connection" 
-                  @click="handleHostSSH"
-                  style="margin-left: 10px"
-                >
-                  终端
-                </el-button>
               </el-col>
             </el-row>
           </el-form>
@@ -186,6 +176,7 @@
                 <div class="table-operation">
                   <el-button size="small" type="text" icon="Edit" @click="showEditHostDialog(scope.row.id)">编辑</el-button>
                   <el-button size="small" type="text" icon="Delete" @click="handleHostDelete(scope.row)">删除</el-button>
+                  <el-button size="small" type="text" icon="Connection" @click="handleHostSSH(scope.row.id)">终端</el-button>
                 </div>
               </template>
             </el-table-column>
@@ -384,15 +375,56 @@
 
     <!-- SSH终端对话框 -->
     <HostSSH 
-      v-if="sshDialogVisible"
       :visible="sshDialogVisible"
       :host-id="currentHostId"
-      @update:visible="val => {
-        console.log('SSH对话框visible变化:', val)
-        sshDialogVisible = val
-      }"
+      ref="sshDialog"
+      @update:visible="val => sshDialogVisible = val"
+      @update:host-id="val => currentHostId = val"
+      @hook:mounted="() => console.log('子组件已挂载')"
+      @hook:updated="() => console.log('子组件已更新')"
     />
-
+    
+    <!-- 调试信息 -->
+    <div style="display: none">
+      <div>当前sshDialogVisible: {{ sshDialogVisible }}</div>
+      <div>当前currentHostId: {{ currentHostId }}</div>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div style="display: none">
+      <div>当前sshDialogVisible: {{ sshDialogVisible }}</div>
+      <div>当前currentHostId: {{ currentHostId }}</div>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div style="display: none">
+      <div>当前sshDialogVisible: {{ sshDialogVisible }}</div>
+      <div>当前currentHostId: {{ currentHostId }}</div>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div style="display: none">
+      <div>当前sshDialogVisible: {{ sshDialogVisible }}</div>
+      <div>当前currentHostId: {{ currentHostId }}</div>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div style="display: none">
+      <div>当前sshDialogVisible: {{ sshDialogVisible }}</div>
+      <div>当前currentHostId: {{ currentHostId }}</div>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div style="display: none">
+      <div>当前sshDialogVisible: {{ sshDialogVisible }}</div>
+      <div>当前currentHostId: {{ currentHostId }}</div>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div style="display: none">
+      <div>当前sshDialogVisible: {{ sshDialogVisible }}</div>
+      <div>当前currentHostId: {{ currentHostId }}</div>
+    </div>
 
     <!-- 主机详情抽屉 -->
     <el-drawer
@@ -440,7 +472,7 @@
 <script>
 import configApi from '@/api/config'
 import CreateCloud from './Host/CreateCloud.vue'
-import HostSSH from './Host/SSH.vue'
+import HostSSH from './Host/Hostssh.vue'
 
 export default {
   components: {
@@ -1059,23 +1091,6 @@ export default {
       this.getHostList()
     },
 
-    // 连接SSH终端
-    handleHostSSH() {
-      console.log('点击终端按钮')
-      if (!this.hostList.length) {
-        this.$message.warning('请先选择主机')
-        return
-      }
-      const selectedHost = this.hostList[0] // 默认选择第一个主机
-      console.log('选择的主机ID:', selectedHost.id)
-      this.$router.push({
-        path: '/cmdb/ssh',
-        query: {
-          hostId: selectedHost.id
-        }
-      })
-    },
-
     // 删除主机
     async handleHostDelete(row) {
       const confirmResult = await this.$confirm('是否确认删除主机"' + row.hostName + '"?', '提示', {
@@ -1095,6 +1110,31 @@ export default {
       }
     },
 
+    // 连接SSH终端
+    handleHostSSH(hostId) {
+      console.log('点击终端按钮，hostId:', hostId)
+      this.currentHostId = hostId
+      console.log('设置currentHostId:', this.currentHostId)
+      this.sshDialogVisible = true
+      console.log('设置sshDialogVisible:', this.sshDialogVisible)
+      
+      // 检查子组件引用和props传递
+      this.$nextTick(() => {
+        console.log('检查子组件引用:', this.$refs.sshDialog)
+        if (this.$refs.sshDialog) {
+          console.log('子组件props:', {
+            hostId: this.$refs.sshDialog.hostId,
+            visible: this.$refs.sshDialog.visible
+          })
+          console.log('子组件data:', {
+            loading: this.$refs.sshDialog.loading,
+            error: this.$refs.sshDialog.error
+          })
+        } else {
+          console.error('子组件引用不存在')
+        }
+      })
+    }
   }
 }
 </script>

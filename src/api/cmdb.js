@@ -137,5 +137,32 @@ export default {
                 ...params
             }
         })
+    },
+    hostcloudcreatealiyun(data) {
+        return request({
+            url: 'cmdb/hostcloudcreatealiyun',
+            method: 'post',
+            data: data
+        })
+    },
+    hostcloudcreatetencent(data) {
+        return request({
+            url: 'cmdb/hostcloudcreatetencent',
+            method: 'post',
+            data: data
+        })
+    },
+    
+    // 获取带主机列表的分组数据
+    getGroupListWithHosts() {
+        return request({
+            url: 'cmdb/grouplistwithhosts',
+            method: 'get'
+        })
+    },
+
+    // WebSocket连接
+    getHostSSHWebSocketUrl(hostId) {
+        return `ws://127.0.0.1:8000/api/v1/cmdb/hostssh/connect/${hostId}`
     }
 }
